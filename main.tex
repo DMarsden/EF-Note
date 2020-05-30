@@ -2,6 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amsfonts, amsthm}
 
+\usepackage{tikz-cd}
+
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
@@ -22,8 +24,73 @@
 
 \maketitle
 
-\section{Most recent strategy}
-This strategy only retains the most recent moves in a play.
+\section{Introduction}
+This note looks at a few candidate schemes for eliminating the need for I-morphisms by adjusting the comonad~$\mathbb{E}_k$.
+
+Some repeating notation:
+\begin{itemize}
+    \item $\epsilon$ will always be the function taking the tail element of a list.
+    \item $L_k$ will denote the~$k$-bounded non-empty list functor on sets and functions.
+\end{itemize}
+To simplify notation, we shall occasionally implicitly overload functions so that they can be applied element wise to tuples of values.
+
+\section{The Naive Scheme}
+In the naive scheme, we restrict our functor to non-repeating sequences. We will need to normalize sequences after the functor action. The simple suggestion is to use the following function:
+\begin{definition}
+We define inductively a family of functions on lists over a set~$X$, indexed by finite subsets of~$X$
+\begin{align*}
+    s^X [] &= []\\
+    s^X (x:xs) &=
+    \begin{cases}
+    s^X xs &\mbox{if} x \in X\\
+    x : s^{X \cup \{ x \}} xs &\mbox{otherwise}
+    \end{cases}
+\end{align*}
+Here for convenience we work with cons lists, and write~$x:xs$ for list $xs$ with element~$x$ added at the front.
+\end{definition}
+We define the structure for our proposed endofunctor.
+\begin{definition}
+For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
+\begin{description}
+\item[Universe] The universe is the set of non-repeating, non-empty lists of elements from~$A$.
+\item[Relations] For n-tuple $\overline{a}$ of elements, and n-ary relation symbol~$R$, we define:
+\begin{equation*}
+    R^{\mathbb{E}^*_k}(\overline{a})
+\end{equation*}
+if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, and:
+\begin{equation*}
+    R^A(\epsilon(\overline{a}))
+\end{equation*}
+\end{description}
+For homomorphism~$h : A \rightarrow B$ we define function:
+\begin{equation*}
+    \mathbb{E}^*_k(h) = s^\emptyset \circ L_k h
+\end{equation*}
+where~$L_k$ is the~$k$-bounded non-empty list functor.
+\end{definition}
+This scheme is unfortunately flawed as we observe:
+\begin{lemma}
+Even at the level of underlying sets, the following diagram does not in general commute:
+\begin{equation*}
+\begin{tikzcd}
+\mathbb{E}^*_k A \ar[r, "\epsilon"] \ar[d, "\mathbb{E}^*_k h"] & A \ar[d, "h"]\\
+\mathbb{E}^*_k B \ar[r, "\epsilon"] &  B
+\end{tikzcd}
+\end{equation*}
+\begin{proof}
+We consider list~$[a,b,c]$ and mapping:
+\begin{align*}
+    h(a) &= a\\
+    h(b) &= b\\
+    h(c) &= c
+\end{align*}
+Then chasing around the top leads to~$a$. On the other hand, chasing along the bottom leads to~$b$. The essential problem is that~$s^\emptyset$ does not preserve the last element of lists, so normalization breaks things.
+\end{proof}
+
+\end{lemma}
+
+\section{Most Recent Appearance Scheme}
+This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe. We shall aim to prove the ``obvious'' construction correct.
 \begin{definition}
 We define inductively a family of functions on lists over a set~$X$, indexed by a finite subsets of~$X$.
 \begin{align*}
@@ -37,10 +104,68 @@ We define inductively a family of functions on lists over a set~$X$, indexed by 
 Here for convenience we assume that our lists are snoc lists, so they build up from the right. The notation~$(xs:x)$ is a list~$xs$ with the element~$x$ added at the right.
 \end{definition}
 \begin{lemma}
-$n^\emptyset$ preserves non-empty lists.
+The function $n^X$ has the following properties:
+\begin{itemize}
+    \item $n^\emptyset$ preserves non-empty lists.
+    \item $n^X$ does not contain any elements of~$X$.
+    \item $n^\emptyset$ preserves the prefix order.
+\end{itemize}
+\end{lemma}
+
+We define the structure for our proposed endofunctor.
+\begin{definition}
+For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
+\begin{description}
+\item[Universe] The universe is the set of non-repeating, non-empty lists of elements from~$A$.
+\item[Relations] For n-tuple $\overline{a}$ of elements, and n-ary relation symbol~$R$, we define:
+\begin{equation*}
+    R^{\mathbb{E}^*_k}(\overline{a})
+\end{equation*}
+if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, and:
+\begin{equation*}
+    R^A(\epsilon(\overline{a}))
+\end{equation*}
+\end{description}
+For homomorphism~$h : A \rightarrow B$ we define function:
+\begin{equation*}
+    \mathbb{E}^*_k(h) = n^\emptyset \circ L_k h
+\end{equation*}
+\end{definition}
+So far, hopefully we have not done much more than try and formalize the proposed construction. Unfortunately we quickly hit a hurdle:
+\begin{lemma}
+For homomorphism~$h : A \rightarrow B$ function~$\mathbb{E}^*_k h$ is not necessarily a homomorphism of type:
+\begin{equation*}
+    \mathbb{E}^*_k A \rightarrow \mathbb{E}^*_k B
+\end{equation*}
 \end{lemma}
 \begin{proof}
-Obvious, as the tail of the list cannot appear in the empty set.
+Let~$A$ and~$B$ have universes~$\{a,b,c\}$ and~$\{a,b\}$ such that:
+\begin{equation*}
+    R^A(b,c) \mbox{ and } R^B(b,a)
+\end{equation*}
+is the only relation. Then the mapping:
+\begin{align*}
+    h(a) &= a\\
+    h(b) &= b\\
+    h(c) &= a
+\end{align*}
+is a homomorphism. We have prefix relation:
+\begin{equation*}
+    [a,b] \leq [a,b,c]
+\end{equation*}
+and so:
+\begin{equation*}
+    R^{\mathbb{E}^*_k A}([a,b], [a,b,c])
+\end{equation*}
+We consider the action of~$\mathbb{E}^*_k h$ on these sequences. Firstly the element wise operation preserves prefix ordering:
+\begin{equation*}
+    L_k [a,b] = [a,b] \leq [a,b,a] = L_k h [a,b,c]
+\end{equation*}
+The second normalization step does not:
+\begin{equation*}
+    \mathbb{E}^*_k [a,b] = [a,b] \not\leq [b,a] = \mathbb{E}^*_k [a,b,c]
+\end{equation*}
+Therefore~$h$ is a homomorphism, but~$\mathbb{E}^*_k h$ is not as it does not preserve~$R$.
 \end{proof}
 
 \end{document}
