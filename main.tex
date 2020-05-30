@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amsthm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{counter}[theorem]{Counterexample}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\numberwithin{theorem}{section}
+
+\title{EF-Note}
+\author{Dan Marsden}
+
+\begin{document}
+
+\maketitle
+
+\section{Most recent strategy}
+This strategy only retains the most recent moves in a play.
+\begin{definition}
+We define inductively a family of functions on lists over a set~$X$, indexed by a finite subsets of~$X$.
+\begin{align*}
+    n^X [] &= []\\
+    n^X (xs:x) &= 
+    \begin{cases}
+    n^X xs &\mbox{ if } x \in X\\
+    (n^{X \cup \{ x \} }xs) : x &\mbox{ otherwise}
+    \end{cases}
+\end{align*}
+Here for convenience we assume that our lists are snoc lists, so they build up from the right. The notation~$(xs:x)$ is a list~$xs$ with the element~$x$ added at the right.
+\end{definition}
+\begin{lemma}
+$n^\emptyset$ preserves non-empty lists.
+\end{lemma}
+\begin{proof}
+Obvious, as the tail of the list cannot appear in the empty set.
+\end{proof}
+
+\end{document}
