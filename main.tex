@@ -30,11 +30,15 @@ This note looks at a few candidate schemes for eliminating the need for I-morphi
 Some repeating notation:
 \begin{itemize}
     \item $\epsilon$ will always be the function taking the tail element of a list.
-    \item $L_k$ will denote the~$k$-bounded non-empty list functor on sets and functions.
+    \item $L_k$ will denote the~$k$-bounded list functor on sets and functions, and~$L^+_k$ its non-empty counterpart.
+    \item $P_\omega$ will denote the finite covariant powerset functor, and~$\eta$ the associated singleton natural transformation.
+    \item We will treat lists as cons lists when convenient, and write~$x:xs$ for list~$xs$ with element~$x$ added at the head.
+    \item We will also treat lists as snoc lists when convenient, and write~$xs:x$ for list~$xs$ with element~$x$ added at the tail.
 \end{itemize}
 To simplify notation, we shall occasionally implicitly overload functions so that they can be applied element wise to tuples of values.
 
 \section{The Naive Scheme}
+\label{sec:naive}
 In the naive scheme, we restrict our functor to non-repeating sequences. We will need to normalize sequences after the functor action. The simple suggestion is to use the following function:
 \begin{definition}
 We define inductively a family of functions on lists over a set~$X$, indexed by finite subsets of~$X$
@@ -46,7 +50,7 @@ We define inductively a family of functions on lists over a set~$X$, indexed by 
     x : s^{X \cup \{ x \}} xs &\mbox{otherwise}
     \end{cases}
 \end{align*}
-Here for convenience we work with cons lists, and write~$x:xs$ for list $xs$ with element~$x$ added at the front.
+
 \end{definition}
 We define the structure for our proposed endofunctor.
 \begin{definition}
@@ -64,9 +68,8 @@ if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, a
 \end{description}
 For homomorphism~$h : A \rightarrow B$ we define function:
 \begin{equation*}
-    \mathbb{E}^*_k(h) = s^\emptyset \circ L_k h
+    \mathbb{E}^*_k(h) = s^\emptyset \circ L^+_k h
 \end{equation*}
-where~$L_k$ is the~$k$-bounded non-empty list functor.
 \end{definition}
 This scheme is unfortunately flawed as we observe:
 \begin{lemma}
@@ -82,15 +85,96 @@ We consider list~$[a,b,c]$ and mapping:
 \begin{align*}
     h(a) &= a\\
     h(b) &= b\\
-    h(c) &= c
+    h(c) &= a
 \end{align*}
 Then chasing around the top leads to~$a$. On the other hand, chasing along the bottom leads to~$b$. The essential problem is that~$s^\emptyset$ does not preserve the last element of lists, so normalization breaks things.
 \end{proof}
 
 \end{lemma}
 
+\section{Ad-hoc Normalization Scheme}
+This scheme is a rather ad-hoc attempt to patch up the deficiency in the plan of section~\ref{sec:naive}. The intuition is to:
+\begin{enumerate}
+    \item Remove duplicate elements from lists as in section~\ref{sec:naive}.
+    \item Ensure that the final element is preserved by truncating back to the ``original final element''.
+\end{enumerate}
+Although the original problem seems to go away, this plan sounds like it will lead to whack-a-mole quite quickly, so maybe optimism shouldn't be too high.
+
+To formalize things, we define another auxiliary function:
+\begin{definition}
+For lists over a set~$X$, and~$x \in X$ we define the following function:
+\begin{align*}
+    t^x [] &= []\\
+    t^x (ys:y) &=
+    \begin{cases}
+    t^x ys &\mbox{if } x \neq y\\
+    (ys:y) &\mbox{otherwise}
+    \end{cases}
+\end{align*}
+\end{definition}
+we the define our putative functor as follows:
+\begin{definition}
+For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
+\begin{description}
+\item[Universe] The universe is the set of non-repeating, non-empty lists of elements from~$A$.
+\item[Relations] For n-tuple $\overline{a}$ of elements, and n-ary relation symbol~$R$, we define:
+\begin{equation*}
+    R^{\mathbb{E}^*_k}(\overline{a})
+\end{equation*}
+if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, and:
+\begin{equation*}
+    R^A(\epsilon(\overline{a}))
+\end{equation*}
+\end{description}
+For homomorphism~$h : A \rightarrow B$ we define function:
+\begin{equation*}
+    \mathbb{E}^*_k(h)(xs:x) = t^{h x}(s^\emptyset \circ L^+_k h (xs:x))
+\end{equation*}
+\end{definition}
+We need a few technical lemmas to proceed.
+\begin{lemma}
+Truncation satisfies the following generalized idempotence property:
+\begin{equation*}
+t^{h a} \circ L^+_k h \circ t^a = t^{h a} \circ L^+_k h
+\end{equation*}
+\end{lemma}
+\begin{lemma}
+Shrinking satisfies the following generalized idempotence property:
+\begin{equation*}
+    s^\emptyset \circ L^+_k h \circ s^\emptyset = s^\emptyset \circ L^+_k h
+\end{equation*}
+\end{lemma}
+\begin{lemma}
+Truncation and shrinking commute:
+\begin{equation*}
+    s^\emptyset \circ t^a = t^a \circ s^\emptyset
+\end{equation*}
+\end{lemma}
+\begin{lemma}
+Shrinking is monotone with respect to prefix ordering:
+\begin{equation*}
+    x \leq y \Rightarrow s^\emptyset x \leq s^\emptyset y
+\end{equation*}
+\end{lemma}
+\begin{lemma}
+Truncation preserves comparability in the prefix order:
+\begin{equation*}
+    x \uparrow y \Rightarrow t^a x \uparrow t^a y
+\end{equation*}
+\end{lemma}
+With these in place, we can now look at the action on morphisms of~$\mathbb{E}^*_k$.
+\begin{lemma}
+For $\sigma$-structure homomorphism~$h : A \rightarrow B$, $\mathbb{E}^*_k h$ is a homomorphism of type:
+\begin{equation*}
+    \mathbb{E}^*_k A \rightarrow \mathbb{E}^*_k B
+\end{equation*}
+\end{lemma}
+\begin{lemma}
+$\mathbb{E}^*_k$ is an endofunctor on the category of~$\sigma$-structures.
+\end{lemma}
+
 \section{Most Recent Appearance Scheme}
-This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe. We shall aim to prove the ``obvious'' construction correct.
+This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
 \begin{definition}
 We define inductively a family of functions on lists over a set~$X$, indexed by a finite subsets of~$X$.
 \begin{align*}
@@ -101,7 +185,6 @@ We define inductively a family of functions on lists over a set~$X$, indexed by 
     (n^{X \cup \{ x \} }xs) : x &\mbox{ otherwise}
     \end{cases}
 \end{align*}
-Here for convenience we assume that our lists are snoc lists, so they build up from the right. The notation~$(xs:x)$ is a list~$xs$ with the element~$x$ added at the right.
 \end{definition}
 \begin{lemma}
 The function $n^X$ has the following properties:
