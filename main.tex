@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amsfonts, amsthm}
+\usepackage{eqproof}
 
 \usepackage{tikz-cd}
 
@@ -133,18 +134,21 @@ For homomorphism~$h : A \rightarrow B$ we define function:
 \end{definition}
 We need a few technical lemmas to proceed.
 \begin{lemma}
+\label{lem:t-idem}
 Truncation satisfies the following generalized idempotence property:
 \begin{equation*}
 t^{h a} \circ L^+_k h \circ t^a = t^{h a} \circ L^+_k h
 \end{equation*}
 \end{lemma}
 \begin{lemma}
+\label{lem:s-idem}
 Shrinking satisfies the following generalized idempotence property:
 \begin{equation*}
     s^\emptyset \circ L^+_k h \circ s^\emptyset = s^\emptyset \circ L^+_k h
 \end{equation*}
 \end{lemma}
 \begin{lemma}
+\label{lem:t-s-commute}
 Truncation and shrinking commute:
 \begin{equation*}
     s^\emptyset \circ t^a = t^a \circ s^\emptyset
@@ -172,6 +176,30 @@ For $\sigma$-structure homomorphism~$h : A \rightarrow B$, $\mathbb{E}^*_k h$ is
 \begin{lemma}
 $\mathbb{E}^*_k$ is an endofunctor on the category of~$\sigma$-structures.
 \end{lemma}
+\begin{proof}
+Preservation of identities is obvious. For composition we calculate:
+\begin{eqproof*}
+\mathbb{E}^*_k(k) \circ \mathbb{E}^*_k(h)(xs)
+\explain{Definitions}
+\mathbb{E}^*_k(k) \circ t^{h\epsilon(xs)} \circ s^\emptyset \circ L^+_k h (xs) 
+\explain{Definitions}
+t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ t^{h \epsilon(xs)} \circ s^\emptyset \circ L^+_k h (xs)
+\explain{Lemma \ref{lem:t-s-commute}}
+t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ s^\emptyset \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
+\explain{Lemma \ref{lem:s-idem}}
+t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
+\explain{Lemma \ref{lem:t-s-commute}}
+s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k k \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
+\explain{Lemma \ref{lem:t-idem}}
+s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k k \circ  L^+_k h (xs)
+\explain{Functoriality}
+s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k (k \circ h) (xs)
+\explain{Lemma \ref{lem:t-s-commute}}
+t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k (k \circ h) (xs)
+\explain{Definitions}
+\mathbb{E}^*_k(k \circ h)(xs)
+\end{eqproof*}
+\end{proof}
 
 \section{Most Recent Appearance Scheme}
 This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
