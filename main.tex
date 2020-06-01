@@ -30,13 +30,21 @@ This note looks at a few candidate schemes for eliminating the need for I-morphi
 
 Some repeating notation:
 \begin{itemize}
-    \item $\epsilon$ will always be the function taking the tail element of a list.
+    \item $\epsilon$ will always be the function taking the tail element of a list, and~$\delta$ will be the non-empty prefixes function.
     \item $L_k$ will denote the~$k$-bounded list functor on sets and functions, and~$L^+_k$ its non-empty counterpart.
     \item $P_\omega$ will denote the finite covariant powerset functor, and~$\eta$ the associated singleton natural transformation.
     \item We will treat lists as cons lists when convenient, and write~$x:xs$ for list~$xs$ with element~$x$ added at the head.
     \item We will also treat lists as snoc lists when convenient, and write~$xs:x$ for list~$xs$ with element~$x$ added at the tail.
 \end{itemize}
 To simplify notation, we shall occasionally implicitly overload functions so that they can be applied element wise to tuples of values.
+
+\subsection*{The Proposals}
+The note investigates three plans of attack. The aim is to either show they work out, or to explicitly record deficiencies that cause problems.
+\begin{itemize}
+    \item Section~\ref{sec:naive} looks at a very naive scheme that fails on basic checking.
+    \item Section~\ref{sec:-most-recent-appearance} looks at a better motivated scheme that addresses the main issue with the naive scheme. Unfortunately this also fails early checking.
+    \item Section~\ref{sec:whack-a-mole} looks at a somewhat ad-hoc scheme, again addressing the main failing in the naive approach. This tentatively seems to work out, although this seems slightly surprising as superficially it seems less well motivated.
+\end{itemize}
 
 \section{The Naive Scheme}
 \label{sec:naive}
@@ -93,7 +101,85 @@ Then chasing around the top leads to~$a$. On the other hand, chasing along the b
 
 \end{lemma}
 
-\section{Ad-hoc Normalization Scheme}
+\section{Most Recent Appearance Scheme}
+\label{sec:-most-recent-appearance}
+This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
+\begin{definition}
+We define inductively a family of functions on lists over a set~$X$, indexed by a finite subsets of~$X$.
+\begin{align*}
+    n^X [] &= []\\
+    n^X (xs:x) &= 
+    \begin{cases}
+    n^X xs &\mbox{ if } x \in X\\
+    (n^{X \cup \{ x \} }xs) : x &\mbox{ otherwise}
+    \end{cases}
+\end{align*}
+\end{definition}
+\begin{lemma}
+The function $n^X$ has the following properties:
+\begin{itemize}
+    \item $n^\emptyset$ preserves non-empty lists.
+    \item $n^X$ does not contain any elements of~$X$.
+\end{itemize}
+\end{lemma}
+We define the structure for our proposed endofunctor.
+\begin{definition}
+For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
+\begin{description}
+\item[Universe] The universe is the set of non-repeating, non-empty lists of elements from~$A$.
+\item[Relations] For n-tuple $\overline{a}$ of elements, and n-ary relation symbol~$R$, we define:
+\begin{equation*}
+    R^{\mathbb{E}^*_k}(\overline{a})
+\end{equation*}
+if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, and:
+\begin{equation*}
+    R^A(\epsilon(\overline{a}))
+\end{equation*}
+\end{description}
+For homomorphism~$h : A \rightarrow B$ we define function:
+\begin{equation*}
+    \mathbb{E}^*_k(h) = n^\emptyset \circ L_k h
+\end{equation*}
+\end{definition}
+So far, hopefully we have not done much more than try and formalize the proposed construction. Unfortunately we quickly hit a hurdle:
+\begin{lemma}
+For homomorphism~$h : A \rightarrow B$ function~$\mathbb{E}^*_k h$ is not necessarily a homomorphism of type:
+\begin{equation*}
+    \mathbb{E}^*_k A \rightarrow \mathbb{E}^*_k B
+\end{equation*}
+\end{lemma}
+\begin{proof}
+Let~$A$ and~$B$ have universes~$\{a,b,c\}$ and~$\{a,b\}$ such that:
+\begin{equation*}
+    R^A(b,c) \mbox{ and } R^B(b,a)
+\end{equation*}
+is the only relation. Then the mapping:
+\begin{align*}
+    h(a) &= a\\
+    h(b) &= b\\
+    h(c) &= a
+\end{align*}
+is a homomorphism. We have prefix relation:
+\begin{equation*}
+    [a,b] \leq [a,b,c]
+\end{equation*}
+and so:
+\begin{equation*}
+    R^{\mathbb{E}^*_k A}([a,b], [a,b,c])
+\end{equation*}
+We consider the action of~$\mathbb{E}^*_k h$ on these sequences. Firstly the element wise operation preserves prefix ordering:
+\begin{equation*}
+    L_k [a,b] = [a,b] \leq [a,b,a] = L_k h [a,b,c]
+\end{equation*}
+The second normalization step does not:
+\begin{equation*}
+    \mathbb{E}^*_k [a,b] = [a,b] \not\leq [b,a] = \mathbb{E}^*_k [a,b,c]
+\end{equation*}
+Therefore~$h$ is a homomorphism, but~$\mathbb{E}^*_k h$ is not as it does not preserve~$R$.
+\end{proof}
+
+\section{Whack-A-Mole Normalization Scheme}
+\label{sec:whack-a-mole}
 This scheme is a rather ad-hoc attempt to patch up the deficiency in the plan of section~\ref{sec:naive}. The intuition is to:
 \begin{enumerate}
     \item Remove duplicate elements from lists as in section~\ref{sec:naive}.
@@ -114,7 +200,7 @@ For lists over a set~$X$, and~$x \in X$ we define the following \emph{truncation
     \end{cases}
 \end{align*}
 \end{definition}
-we the define our putative functor as follows:
+We the define our putative functor as follows:
 \begin{definition}
 For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
 \begin{description}
@@ -162,6 +248,17 @@ Truncation and shrinking commute:
     s^\emptyset \circ t^a = t^a \circ s^\emptyset
 \end{equation*}
 \end{lemma}
+Normalization inherits this generalized idempotence from its components.
+\begin{lemma}
+\label{lem:n-idem}
+Normalization satisfies the following generalized idempotence property:
+\begin{equation*}
+    \hat{n} \circ L^+_k(h) \hat{n} = \hat{n} \circ L^+_k(h)
+\end{equation*}
+\end{lemma}
+\begin{proof}
+    Follows from lemmas~\ref{lem:s-idem}, \ref{lem:t-idem} and~\ref{lem:t-s-commute}.
+\end{proof}
 \begin{lemma}
 \label{lem:s-monotone}
 Shrinking is monotone with respect to prefix ordering:
@@ -228,7 +325,7 @@ We require another technical lemma.
 \label{lem:tail-preservation}
 Normalization preserves tail elements.
 \begin{equation*}
-   \epsilon \circ \hat{n} = \hat{n} 
+   \epsilon \circ \hat{n} = \epsilon
 \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -307,84 +404,34 @@ The comultiplication axioms holds:
 \begin{proof}
 We note that this axiom holds for~$\mathbb{E}_k$ as it is a comonad. The equation above only involves non-repeating sequences at all stages, so normalization does nothing. Therefore the claim reduces to the ordinary E-F comonad property.
 \end{proof}
-So apparently we're good as this is a legitimate comonad. Hmmm.
-
-\section{Most Recent Appearance Scheme}
-This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
-\begin{definition}
-We define inductively a family of functions on lists over a set~$X$, indexed by a finite subsets of~$X$.
-\begin{align*}
-    n^X [] &= []\\
-    n^X (xs:x) &= 
-    \begin{cases}
-    n^X xs &\mbox{ if } x \in X\\
-    (n^{X \cup \{ x \} }xs) : x &\mbox{ otherwise}
-    \end{cases}
-\end{align*}
-\end{definition}
+So apparently we're good as this is a legitimate comonad. Hmmm. We continue anyway.
 \begin{lemma}
-The function $n^X$ has the following properties:
-\begin{itemize}
-    \item $n^\emptyset$ preserves non-empty lists.
-    \item $n^X$ does not contain any elements of~$X$.
-    \item $n^\emptyset$ preserves the prefix order.
-\end{itemize}
-\end{lemma}
-
-We define the structure for our proposed endofunctor.
-\begin{definition}
-For $\sigma$-structure~$A$, define~$\mathbb{E}^*_K$ as having:
-\begin{description}
-\item[Universe] The universe is the set of non-repeating, non-empty lists of elements from~$A$.
-\item[Relations] For n-tuple $\overline{a}$ of elements, and n-ary relation symbol~$R$, we define:
-\begin{equation*}
-    R^{\mathbb{E}^*_k}(\overline{a})
-\end{equation*}
-if the elements of~$\overline{a}$ are pairwise comparable in the prefix order, and:
-\begin{equation*}
-    R^A(\epsilon(\overline{a}))
-\end{equation*}
-\end{description}
-For homomorphism~$h : A \rightarrow B$ we define function:
-\begin{equation*}
-    \mathbb{E}^*_k(h) = n^\emptyset \circ L_k h
-\end{equation*}
-\end{definition}
-So far, hopefully we have not done much more than try and formalize the proposed construction. Unfortunately we quickly hit a hurdle:
-\begin{lemma}
-For homomorphism~$h : A \rightarrow B$ function~$\mathbb{E}^*_k h$ is not necessarily a homomorphism of type:
-\begin{equation*}
-    \mathbb{E}^*_k A \rightarrow \mathbb{E}^*_k B
-\end{equation*}
+For a $\sigma$-structure $A$, normalization is a~$\sigma$-structure homomorphism of type~$\mathbb{E}_k(A) \rightarrow \mathbb{E}^*_k(A)$.
 \end{lemma}
 \begin{proof}
-Let~$A$ and~$B$ have universes~$\{a,b,c\}$ and~$\{a,b\}$ such that:
-\begin{equation*}
-    R^A(b,c) \mbox{ and } R^B(b,a)
-\end{equation*}
-is the only relation. Then the mapping:
-\begin{align*}
-    h(a) &= a\\
-    h(b) &= b\\
-    h(c) &= a
-\end{align*}
-is a homomorphism. We have prefix relation:
-\begin{equation*}
-    [a,b] \leq [a,b,c]
-\end{equation*}
-and so:
-\begin{equation*}
-    R^{\mathbb{E}^*_k A}([a,b], [a,b,c])
-\end{equation*}
-We consider the action of~$\mathbb{E}^*_k h$ on these sequences. Firstly the element wise operation preserves prefix ordering:
-\begin{equation*}
-    L_k [a,b] = [a,b] \leq [a,b,a] = L_k h [a,b,c]
-\end{equation*}
-The second normalization step does not:
-\begin{equation*}
-    \mathbb{E}^*_k [a,b] = [a,b] \not\leq [b,a] = \mathbb{E}^*_k [a,b,c]
-\end{equation*}
-Therefore~$h$ is a homomorphism, but~$\mathbb{E}^*_k h$ is not as it does not preserve~$R$.
+Assume~$R^{\mathbb{E}_k(A)}(\overline{a})$, so the elements of~$\overline{a}$ are pairwise comparable, and~$R^A(\epsilon(\overline{a}))$. Then~$\hat{n}$ preserves pairwise comparability by lemmas~\ref{lem:s-monotone} and~\ref{lem:t-pres-comparability}. It also preserves final elements. Therefore~$R^{\mathbb{E}^*_k}(\hat{n}\overline{a})$.
+\end{proof}
+\begin{lemma}
+\label{lem:n-natural}
+Normalization is natural~$\mathbb{E}_k \Rightarrow \mathbb{E}^*_k$.
+\end{lemma}
+\begin{proof}
+We calculate:
+\begin{eqproof*}
+\mathbb{E}^*_k(h) \circ \hat{n}
+\explain{Definitions}
+\hat{n} \circ L^+_k(h) \circ \hat{n}
+\explain{Lemma~\ref{lem:n-idem}}
+\hat{n} \circ L^+_k(h)
+\explain{definitions}
+\hat{n} \circ \mathbb{E}_k(h)
+\end{eqproof*}
+\end{proof}
+\begin{lemma}
+Normalization is a comonad morphism~$\mathbb{E}_k \Rightarrow \mathbb{E}^*_k$.
+\end{lemma}
+\begin{proof}
+Lemma~\ref{lem:n-natural} establishes naturality. Lemmas~\ref{lem:tail-preservation} and~\ref{lem:normalization-commutation} complete the proof.
 \end{proof}
 
 \end{document}
