@@ -41,8 +41,9 @@ To simplify notation, we shall occasionally implicitly overload functions so tha
 \section{The Naive Scheme}
 \label{sec:naive}
 In the naive scheme, we restrict our functor to non-repeating sequences. We will need to normalize sequences after the functor action. The simple suggestion is to use the following function:
-\begin{definition}
-We define inductively a family of functions on lists over a set~$X$, indexed by finite subsets of~$X$
+\begin{definition}[Shrinking]
+\label{def:shrinking}
+We define inductively a family of \emph{shrinking} functions on lists over a set~$X$, indexed by finite subsets of~$X$
 \begin{align*}
     s^X [] &= []\\
     s^X (x:xs) &=
@@ -51,7 +52,6 @@ We define inductively a family of functions on lists over a set~$X$, indexed by 
     x : s^{X \cup \{ x \}} xs &\mbox{otherwise}
     \end{cases}
 \end{align*}
-
 \end{definition}
 We define the structure for our proposed endofunctor.
 \begin{definition}
@@ -99,11 +99,12 @@ This scheme is a rather ad-hoc attempt to patch up the deficiency in the plan of
     \item Remove duplicate elements from lists as in section~\ref{sec:naive}.
     \item Ensure that the final element is preserved by truncating back to the ``original final element''.
 \end{enumerate}
-Although the original problem seems to go away, this plan sounds like it will lead to whack-a-mole quite quickly, so maybe optimism shouldn't be too high.
+Although the original problem seems to go away, this plan sounds like it will lead to whack-a-mole quite quickly, so maybe optimism possibly shouldn't be too high.
 
 To formalize things, we define another auxiliary function:
-\begin{definition}
-For lists over a set~$X$, and~$x \in X$ we define the following function:
+\begin{definition}[Truncation]
+\label{def:truncation}
+For lists over a set~$X$, and~$x \in X$ we define the following \emph{truncation} function:
 \begin{align*}
     t^x [] &= []\\
     t^x (ys:y) &=
@@ -131,6 +132,13 @@ For homomorphism~$h : A \rightarrow B$ we define function:
 \begin{equation*}
     \mathbb{E}^*_k(h)(xs:x) = t^{h x}(s^\emptyset \circ L^+_k h (xs:x))
 \end{equation*}
+Where we exploit shrinking and truncation from definitions~\ref{def:shrinking} and~\ref{def:truncation} respectively.
+\end{definition}
+\begin{definition}[Normalization]
+It shall be convenient to define shorthand for the composite \emph{normalization} function:
+\begin{equation*}
+    \hat{n}(xs) = t^{\epsilon(xs)} \circ s^\emptyset
+\end{equation*}
 \end{definition}
 We need a few technical lemmas to proceed.
 \begin{lemma}
@@ -155,12 +163,14 @@ Truncation and shrinking commute:
 \end{equation*}
 \end{lemma}
 \begin{lemma}
+\label{lem:s-monotone}
 Shrinking is monotone with respect to prefix ordering:
 \begin{equation*}
     x \leq y \Rightarrow s^\emptyset x \leq s^\emptyset y
 \end{equation*}
 \end{lemma}
 \begin{lemma}
+\label{lem:t-pres-comparability}
 Truncation preserves comparability in the prefix order:
 \begin{equation*}
     x \uparrow y \Rightarrow t^a x \uparrow t^a y
@@ -173,6 +183,12 @@ For $\sigma$-structure homomorphism~$h : A \rightarrow B$, $\mathbb{E}^*_k h$ is
     \mathbb{E}^*_k A \rightarrow \mathbb{E}^*_k B
 \end{equation*}
 \end{lemma}
+\begin{proof}
+Let~$\overline{a}$ be a tuple of elements in~$\mathbb{E}^*_k A$
+Assume $R(\overline{a})$, and so, by definition $R(\epsilon\overline{a})$. As~$h$ is a homomorphism, we then have $R(h\epsilon\overline{a})$, which implies~$R(\epsilon\mathbb{E}^*_k(h)\overline{a})$.
+
+The elements of~$\overline{a}$ are pairwise comparable. $L^+_k h$, $s^\emptyset$ and~$t$ preserve pairwise comparability by lemmas~\ref{lem:s-monotone} and~\ref{lem:t-pres-comparability}, and so the elements of~$\mathbb{E}^*_k(h)(\overline{a})$ are pairwise comparable. Therefore~$R(\epsilon\mathbb{E}^*_k(h)\overline{a})$ implies~$R(\mathbb{E}^*_k(h)\overline{a})$ by definition.
+\end{proof}
 \begin{lemma}
 $\mathbb{E}^*_k$ is an endofunctor on the category of~$\sigma$-structures.
 \end{lemma}
@@ -200,6 +216,70 @@ t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k (k \circ h) (xs)
 \mathbb{E}^*_k(k \circ h)(xs)
 \end{eqproof*}
 \end{proof}
+We now making a couple of easy observations.
+\begin{lemma}
+Both $\epsilon_A$ and~$\delta_A$ are well defined homomorphisms.
+\end{lemma}
+\begin{proof}
+Both preserve non-repeating non-empty lists. The remainder follows by noting they are restrictions of the version for the usual E-F comonads~$\mathbb{E}_k$.
+\end{proof}
+We require another technical lemma.
+\begin{lemma}
+\label{lem:tail-preservation}
+Normalization preserves tail elements.
+\begin{equation*}
+   \epsilon \circ \hat{n} = \hat{n} 
+\end{equation*}
+\end{lemma}
+\begin{proof}
+Immediate from the definitions.
+\end{proof}
+\begin{lemma}
+The tail maps $\epsilon$ are natural~$\mathbb{E}^*_k(-) \Rightarrow 1$.
+\end{lemma}
+\begin{proof}
+We calculate:
+\begin{eqproof*}
+\epsilon \circ \mathbb{E}^*_k(h)(xs)
+\explain{Definitions}
+\epsilon \circ \hat{n} \circ L^+_k(h)(xs)
+\explain{Lemma~\ref{lem:tail-preservation}}
+\epsilon \circ L^+_k(h)(xs)
+\explain{Naturality w.r.t. $L^+_h$}
+h \circ \epsilon
+\end{eqproof*}
+\end{proof}
+Yet another technical lemma.
+\begin{lemma}
+\label{lem:normalization-commutation}
+Normalization commutes with comultiplication as follows:
+\begin{equation*}
+    \delta \circ \hat{n} = \hat{n} \circ L^+_k(\hat{n}) \circ \delta
+\end{equation*}
+\end{lemma}
+\begin{proof}
+Essentially because~$\hat{n}$ takes the first appearances of everything in the list, and~$\delta$ preserves non-repeating sequences.
+\end{proof}
+\begin{lemma}
+The prefixes map~$\delta$ is natural~$\mathbb{E}^*_k \Rightarrow \mathbb{E}^*_k \circ \mathbb{E}^*_k$.
+\end{lemma}
+\begin{proof}
+We calculate as follows:
+\begin{eqproof*}
+\delta \circ \mathbb{E}^*_k(h)
+\explain{Definition}
+\delta \circ \hat{n} \circ L^+_k(h)
+\explain{Lemma \ref{lem:normalization-commutation}}
+\hat{n} \circ L^+_k(\hat{n}) \circ L^+_k(h)
+\explain{Naturality w.r.t. $L^+_k$}
+\hat{n} \circ L^+_k(\hat{n}) \circ (L^+_k \circ L^+_k)(h) \circ \delta
+\explain{Functoriality}
+\hat{n} L^+_k (\hat{n} \circ L^+_k{h}) \circ \delta
+\explain{Definitions}
+(\mathbb{E}^*_k \circ \mathbb{E}^*_k)(h) \circ \delta
+\end{eqproof*}
+\end{proof}
+It remains to check the 3 axioms for a comonad on comonoid form.
 
 \section{Most Recent Appearance Scheme}
 This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
