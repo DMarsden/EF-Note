@@ -280,6 +280,34 @@ We calculate as follows:
 \end{eqproof*}
 \end{proof}
 It remains to check the 3 axioms for a comonad on comonoid form.
+\begin{lemma}
+The left counit axiom holds:
+\begin{equation*}
+    \epsilon_{\mathbb{E}^*_k} \circ \delta = 1
+\end{equation*}
+\end{lemma}
+\begin{proof}
+Identical to that for~$\mathbb{E}_k$.
+\end{proof}
+\begin{lemma}
+The right counit axiom holds:
+\begin{equation*}
+    \mathbb{E}^*_k(\epsilon) \circ \delta = 1
+\end{equation*}
+\end{lemma}
+\begin{proof}
+For a non-repeating input $xs$, $\delta(xs)$ is non-repeating. $\mathbb{E}^*_k(\epsilon)$ then recovers the original list, which is still non-repeating, and so normalization does nothing, and~$xs$ is returned.
+\end{proof}
+\begin{lemma}
+The comultiplication axioms holds:
+\begin{equation*}
+    \delta_{\mathbb{E}^*_k} \circ \delta = \mathbb{E}^*_k(\delta) \circ \delta
+\end{equation*}
+\end{lemma}
+\begin{proof}
+We note that this axiom holds for~$\mathbb{E}_k$ as it is a comonad. The equation above only involves non-repeating sequences at all stages, so normalization does nothing. Therefore the claim reduces to the ordinary E-F comonad property.
+\end{proof}
+So apparently we're good as this is a legitimate comonad. Hmmm.
 
 \section{Most Recent Appearance Scheme}
 This scheme only retains the most recent moves in a play, which is well motivated and straightforward to describe.
