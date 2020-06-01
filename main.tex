@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amsfonts, amsthm}
 \usepackage{eqproof}
+\usepackage{hyperref}
 
 \usepackage{tikz-cd}
 
@@ -18,7 +19,7 @@
 \newtheorem{remark}[theorem]{Remark}
 \numberwithin{theorem}{section}
 
-\title{EF-Note}
+\title{$\mathbb{E}_k$ without repeats v2.0}
 \author{Dan Marsden}
 
 \begin{document}
@@ -26,20 +27,19 @@
 \maketitle
 
 \section{Introduction}
-This note looks at a few candidate schemes for eliminating the need for I-morphisms by adjusting the comonad~$\mathbb{E}_k$.
+This note looks at a few candidate schemes for eliminating the need for I-morphisms by adjusting the comonad~$\mathbb{E}_k$. Actually, we will simply focus on the question of making non-repeating non-empty sequences into a comonad on relational structures, and not directly look at the relationship with I-morphisms.
 
-Some repeating notation:
+We begin by fixing some useful notation:
 \begin{itemize}
     \item $\epsilon$ will always be the function taking the tail element of a list, and~$\delta$ will be the non-empty prefixes function.
     \item $L_k$ will denote the~$k$-bounded list functor on sets and functions, and~$L^+_k$ its non-empty counterpart.
-    \item $P_\omega$ will denote the finite covariant powerset functor, and~$\eta$ the associated singleton natural transformation.
     \item We will treat lists as cons lists when convenient, and write~$x:xs$ for list~$xs$ with element~$x$ added at the head.
     \item We will also treat lists as snoc lists when convenient, and write~$xs:x$ for list~$xs$ with element~$x$ added at the tail.
 \end{itemize}
 To simplify notation, we shall occasionally implicitly overload functions so that they can be applied element wise to tuples of values.
 
 \subsection*{The Proposals}
-The note investigates three plans of attack. The aim is to either show they work out, or to explicitly record deficiencies that cause problems.
+The note investigates three plans of attack. The aim is to either show they work out, or to explicitly record the deficiencies that cause problems.
 \begin{itemize}
     \item Section~\ref{sec:naive} looks at a very naive scheme that fails on basic checking.
     \item Section~\ref{sec:-most-recent-appearance} looks at a better motivated scheme that addresses the main issue with the naive scheme. Unfortunately this also fails early checking.
@@ -241,23 +241,52 @@ Shrinking satisfies the following generalized idempotence property:
     s^\emptyset \circ L^+_k h \circ s^\emptyset = s^\emptyset \circ L^+_k h
 \end{equation*}
 \end{lemma}
-\begin{lemma}
-\label{lem:t-s-commute}
-Truncation and shrinking commute:
+\begin{lemma}[Tom\'as]
+\label{lem:t-s-do-not-commute}
+Truncation and shrinking do not commute in the following manner:
 \begin{equation*}
     s^\emptyset \circ t^a = t^a \circ s^\emptyset
 \end{equation*}
+\begin{proof}
+Consider input~$[a,b,a]$, and truncation at~$a$.
+\end{proof}
+As this commutativity doesn't work out, we go for something weaker.
+\begin{lemma}
+\label{lem:t-s-interaction}
+The following interaction between shrinking and truncation holds:
+\begin{equation*}
+    t^a \circ s^\emptyset \circ t^a = t^a \circ s^\emptyset
+\end{equation*}
 \end{lemma}
-Normalization inherits this generalized idempotence from its components.
+\begin{proof}
+Both sides result in a non-repeating list of values in the input, in the order they first appear, and stopping at~$a$ if it appears.
+\end{proof}
+\end{lemma}
+Normalization inherits generalized idempotence from its components.
 \begin{lemma}
 \label{lem:n-idem}
 Normalization satisfies the following generalized idempotence property:
 \begin{equation*}
-    \hat{n} \circ L^+_k(h) \hat{n} = \hat{n} \circ L^+_k(h)
+    \hat{n} \circ L^+_k(h) \circ \hat{n} = \hat{n} \circ L^+_k(h)
 \end{equation*}
 \end{lemma}
 \begin{proof}
-    Follows from lemmas~\ref{lem:s-idem}, \ref{lem:t-idem} and~\ref{lem:t-s-commute}.
+    We calculate as follows:
+    \begin{eqproof*}
+    \hat{n} \circ L^+_k(h) \circ \hat{n}(xs)
+    \explain{Definitions}
+    t^{h\circ \epsilon(xs)} \circ s^\emptyset \circ L^+_k(h) \circ t^{\epsilon(xs)} \circ s^\emptyset(xs)
+    \explain{Lemma \ref{lem:t-s-interaction}}
+    t^{h\circ \epsilon(xs)} \circ s^\emptyset \circ t^{h\circ \epsilon(xs)} \circ L^+_k(h) \circ t^{\epsilon(xs)} \circ s^\emptyset(xs)
+    \explain{Lemma \ref{lem:t-idem}}
+    t^{h\circ \epsilon(xs)} \circ s^\emptyset \circ t^{h\circ \epsilon(xs)} \circ L^+_k(h) \circ s^\emptyset(xs)
+    \explain{Lemma \ref{lem:t-s-interaction}}
+    t^{h\circ \epsilon(xs)} \circ s^\emptyset \circ L^+_k(h) \circ s^\emptyset(xs)
+    \explain{Lemma \ref{lem:s-idem}}
+    t^{h\circ \epsilon(xs)} \circ s^\emptyset \circ L^+_k(h)
+    \explain{Definitions}
+    \hat{n} \circ L^+_k(h)
+    \end{eqproof*}
 \end{proof}
 \begin{lemma}
 \label{lem:s-monotone}
@@ -266,13 +295,17 @@ Shrinking is monotone with respect to prefix ordering:
     x \leq y \Rightarrow s^\emptyset x \leq s^\emptyset y
 \end{equation*}
 \end{lemma}
+Truncation is not monotone in a useful way, fortunately, we require less.
 \begin{lemma}
 \label{lem:t-pres-comparability}
-Truncation preserves comparability in the prefix order:
+Truncation preserves comparability in the prefix order, for any~$a$ and~$b$:
 \begin{equation*}
-    x \uparrow y \Rightarrow t^a x \uparrow t^a y
+    x \uparrow y \Rightarrow t^{a} x \uparrow t^{b} y
 \end{equation*}
 \end{lemma}
+\begin{proof}
+Any two prefixes of a prefix comparable pair are prefix comparable as they are linearly ordered.
+\end{proof}
 With these in place, we can now look at the action on morphisms of~$\mathbb{E}^*_k$.
 \begin{lemma}
 For $\sigma$-structure homomorphism~$h : A \rightarrow B$, $\mathbb{E}^*_k h$ is a homomorphism of type:
@@ -296,19 +329,11 @@ Preservation of identities is obvious. For composition we calculate:
 \explain{Definitions}
 \mathbb{E}^*_k(k) \circ t^{h\epsilon(xs)} \circ s^\emptyset \circ L^+_k h (xs) 
 \explain{Definitions}
-t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ t^{h \epsilon(xs)} \circ s^\emptyset \circ L^+_k h (xs)
-\explain{Lemma \ref{lem:t-s-commute}}
-t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ s^\emptyset \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
-\explain{Lemma \ref{lem:s-idem}}
-t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k k \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
-\explain{Lemma \ref{lem:t-s-commute}}
-s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k k \circ t^{h \epsilon(xs)} \circ  L^+_k h (xs)
-\explain{Lemma \ref{lem:t-idem}}
-s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k k \circ  L^+_k h (xs)
+\hat{n} \circ L^+_k k \circ \hat{n} \circ L^+_k h (xs)
+\explain{Lemma \ref{lem:n-idem}}
+\hat{n} \circ L^+_k k \circ  L^+_k h (xs)
 \explain{Functoriality}
-s^\emptyset \circ t^{kh\epsilon(xs)} \circ L^+_k (k \circ h) (xs)
-\explain{Lemma \ref{lem:t-s-commute}}
-t^{kh\epsilon(xs)} \circ s^\emptyset \circ L^+_k (k \circ h) (xs)
+\hat{n} \circ L^+_k (k \circ h) (xs)
 \explain{Definitions}
 \mathbb{E}^*_k(k \circ h)(xs)
 \end{eqproof*}
@@ -332,7 +357,7 @@ Normalization preserves tail elements.
 Immediate from the definitions.
 \end{proof}
 \begin{lemma}
-The tail maps $\epsilon$ are natural~$\mathbb{E}^*_k(-) \Rightarrow 1$.
+The tail maps $\epsilon$ are natural~$\mathbb{E}^*_k \Rightarrow 1$.
 \end{lemma}
 \begin{proof}
 We calculate:
