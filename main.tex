@@ -19,7 +19,7 @@
 \newtheorem{remark}[theorem]{Remark}
 \numberwithin{theorem}{section}
 
-\title{$\mathbb{E}_k$ without repeats v2.0}
+\title{$\mathbb{E}_k$ without repeats v3.0}
 \author{Dan Marsden}
 
 \begin{document}
@@ -193,12 +193,13 @@ To formalize things, we define another auxiliary function:
 For lists over a set~$X$, and~$x \in X$ we define the following \emph{truncation} function:
 \begin{align*}
     t^x [] &= []\\
-    t^x (ys:y) &=
+    t^x (y:ys) &=
     \begin{cases}
-    t^x ys &\mbox{if } x \neq y\\
-    (ys:y) &\mbox{otherwise}
+    y : t^x ys &\mbox{if } x \neq y\\
+    [y] &\mbox{otherwise}
     \end{cases}
 \end{align*}
+We could define truncation at the first matching value from the right similarly. We shall denote this $r^x$ when needed in explanations.
 \end{definition}
 We the define our putative functor as follows:
 \begin{definition}
@@ -241,16 +242,23 @@ Shrinking satisfies the following generalized idempotence property:
     s^\emptyset \circ L^+_k h \circ s^\emptyset = s^\emptyset \circ L^+_k h
 \end{equation*}
 \end{lemma}
-\begin{lemma}[Tom\'as]
+\begin{lemma}
 \label{lem:t-s-do-not-commute}
-Truncation and shrinking do not commute in the following manner:
+Shrinking and truncation commute:
 \begin{equation*}
     s^\emptyset \circ t^a = t^a \circ s^\emptyset
 \end{equation*}
+Truncation from the right, $r^a$, and shrinking do not commute (Tom\'a\v{s}):
+\begin{equation*}
+    s^\emptyset \circ r^a = r^a \circ s^\emptyset
+\end{equation*}
 \begin{proof}
-Consider input~$[a,b,a]$, and truncation at~$a$.
+For the first step, this is essentially because both operations work from the same end
+and preserve the order of first occurrences.
+For the counterexample, consider input~$[a,b,a]$, and truncation at~$a$.
 \end{proof}
-As this commutativity doesn't work out, we go for something weaker.
+We really only need a weaker property, which also conveniently involves less swapping during proofs
+than using commutativity directly.
 \begin{lemma}
 \label{lem:t-s-interaction}
 The following interaction between shrinking and truncation holds:
